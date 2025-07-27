@@ -10,7 +10,7 @@ This repository contains a **deep historical backtesting engine** for the [Mean 
 
 ## 🧠 About This Project
 
-This backtesting engine is purpose-built for analyzing the performance of a mean reversion strategy on a universe of 100 highly liquid U.S. stocks. It simulates the strategy over historical data and evaluates:
+This backtesting engine is purpose-built for analyzing the performance of a mean reversion strategy on a universe of a bunch of highly liquid U.S. stocks. It simulates the strategy over historical data and evaluates:
 
 - Entry and exit performance
 - Trade-level statistics (win rate, expectancy, holding time)
@@ -42,7 +42,7 @@ Note: This is the results for a one week period. Due to yfinance limits on free 
 
 ## 💡 Features
 
-- ✅ Historical backtest across **100 top U.S. tickers**
+- ✅ Historical backtest across **a bunch of top U.S. tickers**
 - ✅ Slippage and commission simulation
 - ✅ Dynamic portfolio sizing / capital constraints
 - ✅ Configurable reversion signal (z-score, Bollinger, etc.)
@@ -53,7 +53,7 @@ Note: This is the results for a one week period. Due to yfinance limits on free 
 
 ## 📦 Ticker Universe
 
-This strategy runs on a universe of **100 unique, highly liquid U.S. stocks**, drawn from the top of the S&P 500 and other mega/large-cap companies with strong liquidity profiles.
+This strategy runs on a universe of **a bunch of unique, highly liquid U.S. stocks**, drawn from the top of the S&P 500 and other mega/large-cap companies with strong liquidity profiles.
 
 Examples include AAPL, MSFT, GOOGL, AMZN, META, TSLA, NVDA, JPM, V, JNJ, and many others.
 
@@ -77,7 +77,7 @@ That project executes this strategy on real markets using broker APIs, manages o
 │
 ├── backtest.py           # Main backtest engine
 ├── strategy.py           # Entry/exit logic
-├── tickers.py            # List of top 100 tickers
+├── tickers.py            # List of top a bunch of tickers
 ├── data/                 # Historical OHLCV data
 ├── results/              # Performance outputs, plots, trade logs
 ├── utils.py              # Helper functions
