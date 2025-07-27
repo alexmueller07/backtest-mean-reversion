@@ -36,7 +36,7 @@ The strategy is typically applied on **daily** or **intraday** OHLCV data using 
 
 <img width="1919" height="1199" alt="image" src="https://github.com/user-attachments/assets/b7572f42-0c2b-4024-bfde-2d3a6b8df6fd" />
 
-Note: This is the results for a one week period. Due to yfinance limits on free API I could only check week to week. I ended up checking every week and this result is from week #2 which is the closest to average. The other weeks went {Week 1: +%4.2
+Note: This is the results for a one week period. Due to yfinance limits on free API I could only check week to week. I ended up checking every week and this result is from week #2 which is the closest to average. The other weeks went {Week 1: +2.91%, Week 2: +2.23%, Week 3:, Week 4: + }
 
 ---
 
