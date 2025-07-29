@@ -28,8 +28,6 @@ The core idea of the strategy:
 
 > **Buy weakness, sell strength** — exploiting short-term reversions in large-cap stocks using mean-reversion signals (e.g., z-score of returns, RSI oversold conditions, Bollinger Band touches, etc.)
 
-The strategy is typically applied on **daily** or **intraday** OHLCV data using standard statistical thresholds.
-
 ---
 
 ## Results
@@ -37,6 +35,8 @@ The strategy is typically applied on **daily** or **intraday** OHLCV data using 
 <img width="1919" height="1199" alt="image" src="https://github.com/user-attachments/assets/b7572f42-0c2b-4024-bfde-2d3a6b8df6fd" />
 
 Note: This is the results for a one week period. Due to yfinance limits on free API I could only check week to week. I ended up checking every week over a 5 week timeframe and this result is from week #2 which is the median (2 weeks higher, 2 weeks lower). The other weeks went {Week 1: +2.91%, Week 2 (median): +2.31%, Week 3: +1.41%, Week 4: +2.39%, Week 5: +1.27}. These results are extrordinarily positive, and not sustainable long term. I am currently running deeper and longer tests by having the script deployed on a server and will update with better data once available. Although it seems to consistently outperform the base market, the +2% returns every single week are not sustainable and not what will occur to your portfolio if you were to run this script.
+
+In depth live testing and checking results of the algorithm started on Tuesday, 7/29/2025
 
 ---
 
