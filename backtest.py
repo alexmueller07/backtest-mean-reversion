@@ -1,12 +1,26 @@
 # backtest.py
 
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from config import TICKERS, CAPITAL
-from data_download import download_data
-from strategy import generate_signals
+import json
 import os
+
+import numpy as np
+import pandas as pd
+import matplotlib
+
+matplotlib.use("Agg")  # render to file; no display needed for headless/CI runs
+import matplotlib.pyplot as plt  # noqa: E402
+
+from config import TICKERS, CAPITAL
+from strategy import generate_signals
+from metrics import (
+    MINUTE_BARS_PER_YEAR,
+    annualized_return,
+    equity_to_returns,
+    max_drawdown,
+    sharpe_ratio,
+    total_return,
+    win_rate,
+)
 
 def load_clean_csv(ticker):
     df = pd.read_csv(f"data/{ticker}.csv")
@@ -59,6 +73,10 @@ def buy_and_hold(df, initial_capital):
 
 def main():
     if not os.path.exists("data"):
+        # Imported lazily so a backtest on already-downloaded data needs no
+        # network access (and no yfinance install).
+        from data_download import download_data
+
         download_data(TICKERS)
 
     starting_capital = CAPITAL
@@ -87,44 +105,69 @@ def main():
         except Exception as e:
             print(f"Failed on {ticker}: {e}")
 
-    avg_final = np.mean(final_capitals)
-    total_return = (avg_final - starting_capital) / starting_capital * 100
+    if not equity_curves:
+        print("No tickers produced an equity curve; nothing to evaluate.")
+        return None
 
-    print("\n============== BACKTEST RESULTS ==============")
-    print(f"Starting Capital: {starting_capital}")
-    print(f"Final Capital: {avg_final}")
-    print(f"The Strategy Returned: {total_return:.2f}%")
-    print("------------------------")
-    print(f"The Strategy Outperformed Buy and Hold: {100 * beat_benchmark / len(TICKERS):.2f}% of the time")
-    print(f"The Strategy was Profitable: {100 * profitable / len(TICKERS):.2f}% of the time")
-    
-    bh_returns = []
-    for ticker in TICKERS:
-        try:
-            df = load_clean_csv(ticker)
-            bh = buy_and_hold(df, starting_capital)
-            bh_returns.append(bh)
-        except:
-            pass
-
-    bh_avg = np.mean(bh_returns)
-    bh_total = (bh_avg - starting_capital) / starting_capital * 100
-    print(f"In this time Buy and Hold: {bh_total:.2f}%")
-
-    # Plot average equity curve
+    # Build the aggregate portfolio equity curve (mean across all tickers),
+    # anchored at the starting capital so metrics read on a real-dollar basis.
     min_len = min(len(c) for c in equity_curves)
     trimmed = [np.array(c[:min_len]) for c in equity_curves]
-    avg_curve = np.mean(trimmed, axis=0)
+    avg_curve = np.concatenate([[starting_capital], np.mean(trimmed, axis=0)])
+
+    # Per-ticker PnL drives the trade-level win rate.
+    per_ticker_pnl = np.array(final_capitals) - starting_capital
+
+    bh_finals = []
+    for ticker in TICKERS:
+        try:
+            bh_finals.append(buy_and_hold(load_clean_csv(ticker), starting_capital))
+        except Exception:
+            pass
+    bh_total_pct = (np.mean(bh_finals) - starting_capital) / starting_capital * 100 if bh_finals else 0.0
+
+    returns = equity_to_returns(avg_curve)
+    metrics = {
+        "tickers_tested": len(final_capitals),
+        "bar_frequency": "1min",
+        "periods_per_year": MINUTE_BARS_PER_YEAR,
+        "total_return_pct": round(total_return(avg_curve) * 100, 2),
+        "annualized_return_pct": round(annualized_return(avg_curve) * 100, 2),
+        "sharpe_ratio": round(sharpe_ratio(returns), 2),
+        "max_drawdown_pct": round(max_drawdown(avg_curve) * 100, 2),
+        "win_rate_pct": round(win_rate(per_ticker_pnl) * 100, 2),
+        "beat_buy_and_hold_pct": round(100 * beat_benchmark / len(final_capitals), 2),
+        "profitable_pct": round(100 * profitable / len(final_capitals), 2),
+        "buy_and_hold_total_return_pct": round(float(bh_total_pct), 2),
+    }
+
+    print("\n============== BACKTEST RESULTS ==============")
+    print(f"Tickers tested:        {metrics['tickers_tested']}")
+    print(f"Total return:          {metrics['total_return_pct']:.2f}%")
+    print(f"Annualized return:     {metrics['annualized_return_pct']:.2f}%")
+    print(f"Sharpe ratio:          {metrics['sharpe_ratio']:.2f}")
+    print(f"Max drawdown:          {metrics['max_drawdown_pct']:.2f}%")
+    print(f"Win rate (by ticker):  {metrics['win_rate_pct']:.2f}%")
+    print(f"Beat buy-and-hold:     {metrics['beat_buy_and_hold_pct']:.2f}% of tickers")
+    print(f"Profitable:            {metrics['profitable_pct']:.2f}% of tickers")
+    print(f"Buy-and-hold return:   {metrics['buy_and_hold_total_return_pct']:.2f}%")
+    print("===============================================")
+
+    os.makedirs("results", exist_ok=True)
+    with open(os.path.join("results", "metrics.json"), "w") as handle:
+        json.dump(metrics, handle, indent=2)
 
     plt.plot(avg_curve, label="Strategy")
-    plt.axhline(starting_capital, color='gray', linestyle='--', label="Start")
+    plt.axhline(starting_capital, color="gray", linestyle="--", label="Start")
     plt.title("Average Equity Curve Across All Tickers")
     plt.xlabel("Time")
     plt.ylabel("Equity ($)")
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
-    plt.show()
+    plt.savefig(os.path.join("results", "equity_curve.png"), dpi=120)
+
+    return metrics
 
 if __name__ == "__main__":
     main()

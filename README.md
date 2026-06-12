@@ -30,13 +30,46 @@ The core idea of the strategy:
 
 ---
 
-## Results
+## Backtests
 
-<img width="1919" height="1199" alt="image" src="https://github.com/user-attachments/assets/b7572f42-0c2b-4024-bfde-2d3a6b8df6fd" />
+Two backtests are included, for two different jobs:
 
-Note: This is the results for a one week period. Due to yfinance limits on free API I could only check week to week. I ended up checking every week over a 5 week timeframe and this result is from week #2 which is the median (2 weeks higher, 2 weeks lower). The other weeks went {Week 1: +2.91%, Week 2 (median): +2.31%, Week 3: +1.41%, Week 4: +2.39%, Week 5: +1.27}. These results are extrordinarily positive, and not sustainable long term. I am currently running deeper and longer tests by having the script deployed on a server and will update with better data once available. Although it seems to consistently outperform the base market, the +2% returns every single week are not sustainable and not what will occur to your portfolio if you were to run this script.
+- **`backtest.py`** — minute-bar backtest over the most recent ~1 week (the most
+  yfinance's free tier allows at 1-minute resolution). Good for a quick smoke
+  test, but far too short to annualize. **Do not read its Sharpe as meaningful**:
+  annualizing a week of minute returns inflates it into nonsense.
+- **`daily_backtest.py`** — a multi-year **daily** backtest, which is the right
+  tool for risk-adjusted metrics. Signal bands are computed on a trailing,
+  one-bar-lagged window (no lookahead), and each position earns the *next* bar's
+  return, matching a realistic fill.
 
-In depth live testing and checking results of the algorithm started on Tuesday, 7/29/2025
+### Latest 3-year daily run (50 large-cap U.S. equities)
+
+| Metric | Value |
+|---|---|
+| Sharpe ratio | 0.85 |
+| Annualized return | 7.7% |
+| Total return (3y) | 24.8% |
+| Max drawdown | -13.7% |
+| Win rate (by ticker) | 78% |
+| Buy-and-hold (3y) | 62.7% |
+
+Read honestly: the strategy earns a positive risk-adjusted return with a shallow
+drawdown, but over this window it **underperforms buy-and-hold on absolute
+return** because it holds cash whenever a name is not oversold. That trade-off —
+lower return, lower drawdown — is the point of measuring it properly rather than
+quoting a cherry-picked short window. Numbers regenerate with
+`python daily_backtest.py` and are written to `results/daily_metrics.json`.
+
+## Tests
+
+The metric functions (Sharpe, max drawdown, win rate, returns) are pure and unit
+tested:
+
+```bash
+pip install -r requirements.txt
+pytest
+```
 
 ---
 
